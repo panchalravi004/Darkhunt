@@ -1,0 +1,76 @@
+def ai(self):
+        self.poly_1 = [self.rect.x-30,self.rect.y+260]
+        self.poly_2 = [self.rect.x+70,self.rect.y+260]
+        pygame.draw.polygon(screen,YELLOWGREY,[(self.rect.x+20,self.rect.y+20),self.poly_1,self.poly_2])
+        
+        #detector
+        surf_x = 0
+        v_height = 5
+        v_width = 5
+        count = [10,9,9,9,8,8,7,7,7,6,6,6,5,5,4,4,3,3,3,2,2,1,1]
+        
+        for j in range(23):
+            for i in range(count[j]):
+                surf = pygame.surface.Surface((5,5))
+                surf.set_colorkey(BLACK)
+                surf_rect = surf.get_rect(topleft=(self.poly_1[0]+surf_x+v_width,self.poly_1[1]-v_height))
+                screen.blit(surf,surf_rect)
+                self.obj.append(surf_rect)
+                surf_x += 10
+            v_height += 10
+            v_width += 2
+            surf_x = 0
+
+        if self.initcount == 100:
+            n = random.randint(0,2)
+            if n == 0:
+                self.left = True
+                self.right = False
+                self.initcount += 1
+            if n == 1:
+                self.left = False
+                self.right = True
+                self.initcount += 1
+
+        if self.count == 0:
+            self.right = True
+            self.left = False
+
+        if self.count == 200:
+            self.left = True
+            self.right = False
+
+        if self.left:
+            # self.poly_1[0] -= 2.4
+            # self.poly_1[1] -= 0.8
+            # self.poly_2[0] -= 2.4
+            # self.poly_2[1] += 0.8
+            self.rect.x -= 1
+            self.count -= 1
+
+        if self.right:
+            # self.poly_1[0] += 2.4
+            # self.poly_1[1] += 0.8
+            # self.poly_2[0] += 2.4
+            # self.poly_2[1] -= 0.8
+            self.rect.x += 1
+            self.count += 1
+
+
+#detector
+        # surf_x = 0
+        # v_height = 5
+        # v_width = 5
+        # count = [5,4,4,3,3,3,2,2,1,1]
+        
+        # for j in range(10):
+        #     for i in range(count[j]):
+        #         surf = pygame.surface.Surface((15,15))
+        #         surf.set_colorkey(BLACK)
+        #         surf_rect = surf.get_rect(topleft=(self.poly_1[0]+surf_x+v_width,self.poly_1[1]-v_height))
+        #         screen.blit(surf,surf_rect)
+        #         self.obj.append(surf_rect)
+        #         surf_x += 20
+        #     v_height += 25
+        #     v_width += 4
+        #     surf_x = 0
