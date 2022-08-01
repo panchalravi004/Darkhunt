@@ -21,13 +21,13 @@ pygame.display.set_caption("Dark-Hunt")
 
 # SET FPS
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 120
 
 # DEFINE COLORS
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREY = (104, 104, 104)
-YELLOWGREY = (234, 212, 152)
+YELLOWGREY = (218, 214, 182)
 DARKGREEN = (25, 65, 25)
 LIGHTGREEN = (25, 250, 25)
 RED = (255, 25, 25)
@@ -35,6 +35,7 @@ DARKBLUE = (20, 50, 105)
 LIGHTBLUE = (20, 25, 255)
 YELLOW = (255, 255, 0)
 PISTA = (212,241,231)
+BROWN = (165,42,42)
 
 # Game Varialble
 startgame = True
@@ -91,6 +92,22 @@ class World:
                     fire = Fire(pos_x,pos_y)
                     fire_group.add(fire)
                     all_sprire.add(fire)
+                if col == 5:
+                    slider = Slider(pos_x,pos_y)
+                    slider_group.add(slider)
+                    all_sprire.add(slider)
+                if col == 6:
+                    polyobs = PolyObs(pos_x,pos_y)
+                    polyobs_group.add(polyobs)
+                    all_sprire.add(polyobs)
+                if col == 7:
+                    polycombo = PolyCombo(pos_x,pos_y)
+                    polycombo_group.add(polycombo)
+                    all_sprire.add(polycombo)
+                if col == 8:
+                    fireflame = FireFlame(pos_x,pos_y)
+                    fireflame_group.add(fireflame)
+                    all_sprire.add(fireflame)
         return player,self.obs
 
 move_left = False
@@ -144,7 +161,7 @@ class Player(pygame.sprite.Sprite):
                 particle[0][0] += particle[1][0]
                 particle[0][1] -= particle[1][1] * 0.08
                 particle[2] -= 0.1
-                particle[1][1] += 0.2
+                # particle[1][1] += 0.2
 
                 tail = pygame.surface.Surface((particle[2],particle[2]))
                 tail.fill(BLACK)
@@ -161,7 +178,7 @@ class Player(pygame.sprite.Sprite):
                 particle[0][0] -= particle[1][0]
                 particle[0][1] -= particle[1][1] * 0.08
                 particle[2] -= 0.1
-                particle[1][1] += 0.2
+                # particle[1][1] += 0.2
 
                 tail = pygame.surface.Surface((particle[2],particle[2]))
                 tail.fill(BLACK)
@@ -315,6 +332,23 @@ class Player(pygame.sprite.Sprite):
                 elif self.val_y >= 0:
                     self.in_air = False
                     dy = box.rect.top - self.rect.bottom
+
+        for slider in slider_group:
+            if slider.rect.colliderect(self.rect.x,self.rect.y + dy,40,40):
+                    
+                if self.val_y < 0:
+                    dy = slider.rect.bottom - self.rect.top
+                elif self.val_y >= 0:
+                    self.in_air = False
+                    dy = slider.rect.top - self.rect.bottom
+                    if slider.direction == "LEFT":
+                        if slider.move_down != 1:
+                            dx -= 1
+                    elif slider.direction == "RIGHT":
+                        if slider.move_down != 159:
+                            dx += 1
+                    else:
+                        dx = 0
             
         self.rect.x += dx
         self.rect.y += dy
@@ -515,17 +549,69 @@ class Fire(pygame.sprite.Sprite):
     def update(self):
         self.rect.x += player.screen_scroll
         self.flame()
+        
     def flame(self):
+
         for i in range(2):
-            self.fire_particles.append([[self.rect.x-20+random.randint(1,60),self.rect.y-5+random.randint(1,30)], [
-                                random.randint(5,20)/10, random.randint(0, 2)], random.randint(10,20),random.randint(60,200)])
+            self.fire_particles.append([
+                [self.rect.x-20+random.randint(1,60),self.rect.y-5+random.randint(1,30)],
+                [random.randint(1,4), random.randint(0, 2)],
+                random.randint(10,20),
+                random.randint(60,250),
+                random.choice([RED]),
+                ])
         for particle in self.fire_particles:
-            particle[0][0] -= particle[1][0] * 0.05
+            particle[0][0] -= particle[1][0] * 0.1
             particle[0][1] -= particle[1][1] * 0.8
             particle[2] -= 0.4
             particle[3] -= 2
-            # particle[1][1] += 0.2
+            # particle[1][1] += 0.02
+            # particle[1][0] += 0.01
 
+            f = pygame.surface.Surface((particle[2],particle[2]))
+            f.set_alpha(particle[3])
+            f_rect = f.get_rect(topleft=(int(particle[0][0]), int(particle[0][1])))
+            f.fill(particle[4])
+            screen.blit(f,f_rect)
+            if particle[2] <= 1:
+                self.fire_particles.remove(particle)
+
+class Slider(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        super(Slider,self).__init__()
+        self.x = x
+        self.y = y
+        self.image = pygame.surface.Surface((80,10))
+        # self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect(topleft=(x,y))
+        self.fire_particles = []
+        self.move_down = 80
+        self.direction = "LEFT"
+    def update(self):
+        self.rect.x += player.screen_scroll
+        if self.move_down <= 0:
+            self.direction = "RIGHT"
+        if self.move_down >= 160:
+            self.direction = "LEFT"
+
+        if self.direction=="LEFT":
+            self.rect.x -= 1
+            self.move_down -= 1
+        if self.direction=="RIGHT":
+            self.rect.x += 1
+            self.move_down += 1
+
+        self.flame()
+    def flame(self):
+        for i in range(2):
+            self.fire_particles.append([[self.rect.x+random.randint(1,75),self.rect.y+random.randint(1,10)], [
+                                random.randint(5,20)/10, random.randint(0, 2)], random.randint(5,10),random.randint(60,200)])
+        for particle in self.fire_particles:
+            particle[0][0] -= particle[1][0] * 0.05
+            particle[0][1] += particle[1][1] * 2
+            particle[2] -= 0.4
+            particle[3] -= 2
+            # particle[1][1] += 0.2
             f = pygame.surface.Surface((particle[2],particle[2]))
             f.set_alpha(particle[3])
             f_rect = f.get_rect(topleft=(int(particle[0][0]), int(particle[0][1]))) 
@@ -535,6 +621,190 @@ class Fire(pygame.sprite.Sprite):
             if particle[2] <= 1:
                 self.fire_particles.remove(particle)
 
+class FireFlame(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        super(FireFlame,self).__init__()
+        self.x = x
+        self.y = y
+        self.image = pygame.surface.Surface((40,40))
+        self.image.set_colorkey(BLACK)
+        # self.image.set_alpha(100)
+        self.rect = self.image.get_rect(topleft=(x,y))
+        self.point = [
+            [20,+30],
+            [20,+20],
+            [20,+10],
+            [20,0],
+            [20,-10]
+            ]
+        self.lr = [4,6,4,2]
+        self.ldirect = "RIGHT"
+        self.rdirect = "LEFT"
+        self.cool = 10
+        self.particles = []
+    def update(self):
+        
+        self.rect.x += player.screen_scroll
+        allpoint = []
+        centerlist = []
+
+        if self.ldirect == "RIGHT":
+            self.cool -= 1
+        if self.ldirect == "LEFT":
+            self.cool += 1
+
+        if self.cool<=0:
+            self.ldirect = "LEFT"
+            self.rdirect = "RIGHT"
+        if self.cool>=20:
+            self.ldirect = "RIGHT"
+            self.rdirect = "LEFT"
+
+        #point
+        for index,i in enumerate(self.point):
+            center = pygame.surface.Surface((5,5))
+            center.set_alpha(0)
+            center_rect = center.get_rect(center=(self.rect.x+i[0],self.rect.y+i[1]))
+            screen.blit(center,center_rect)
+            centerlist.append(center_rect)
+            allpoint.append(center_rect)
+            if index != 0 and index != 4:
+                # print(index)
+                left = pygame.surface.Surface((5,5))
+                left.set_alpha(0)
+                left_rect = left.get_rect(topleft=(center_rect.x-self.lr[index],center_rect.y))
+                screen.blit(left,left_rect)
+                allpoint.append(left_rect)
+
+                right = pygame.surface.Surface((5,5))
+                right.set_alpha(0)
+                right_rect = right.get_rect(topleft=(center_rect.x+self.lr[index],center_rect.y))
+                screen.blit(right,right_rect)
+                allpoint.append(right_rect)
+            if index ==0:
+                left = pygame.surface.Surface((5,5))
+                left.set_alpha(0)
+                left_rect = left.get_rect(topleft=(center_rect.x-self.lr[index]-2,center_rect.y-5))
+                screen.blit(left,left_rect)
+                allpoint.append(left_rect)
+
+                right = pygame.surface.Surface((5,5))
+                right.set_alpha(0)
+                right_rect = right.get_rect(topleft=(center_rect.x+self.lr[index]+2,center_rect.y-5))
+                screen.blit(right,right_rect)
+                allpoint.append(right_rect)
+
+        # for ind_i,i in enumerate(centerlist):
+        #     if ind_i == 1 or ind_i == 2:
+        #         for ind_j,j in enumerate(allpoint):
+        #             pygame.draw.line(screen,WHITE,[i.x,i.y],[j.x,j.y],width=1)
+
+        for ind_i,i in enumerate(self.point):
+            if ind_i%2 ==0:
+                if self.ldirect == "RIGHT":
+                    i[0] += 0.15
+                if self.ldirect == "LEFT":
+                    i[0] -= 0.15
+            else:
+                if self.rdirect == "RIGHT":
+                    i[0] += 0.1
+                if self.rdirect == "LEFT":
+                    i[0] -= 0.1
+
+        #center
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[0].x,allpoint[0].y),(allpoint[1].x,allpoint[1].y),(allpoint[2].x,allpoint[2].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[3].x,allpoint[3].y),(allpoint[1].x,allpoint[1].y),(allpoint[2].x,allpoint[2].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[3].x,allpoint[3].y),(allpoint[7].x,allpoint[7].y),(allpoint[8].x,allpoint[8].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[6].x,allpoint[6].y),(allpoint[10].x,allpoint[10].y),(allpoint[11].x,allpoint[11].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[12].x,allpoint[12].y),(allpoint[10].x,allpoint[10].y),(allpoint[11].x,allpoint[11].y)])
+        #left
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[1].x,allpoint[1].y),(allpoint[4].x,allpoint[4].y),(allpoint[3].x,allpoint[3].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[4].x,allpoint[4].y),(allpoint[3].x,allpoint[3].y),(allpoint[7].x,allpoint[7].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[7].x,allpoint[7].y),(allpoint[6].x,allpoint[6].y),(allpoint[10].x,allpoint[10].y)])
+        #right
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[2].x,allpoint[2].y),(allpoint[3].x,allpoint[3].y),(allpoint[5].x,allpoint[5].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[5].x,allpoint[5].y),(allpoint[3].x,allpoint[3].y),(allpoint[8].x,allpoint[8].y)])
+        pygame.draw.polygon(screen,YELLOW,[(allpoint[8].x,allpoint[8].y),(allpoint[6].x,allpoint[6].y),(allpoint[11].x,allpoint[11].y)])
+        #handle
+        pygame.draw.polygon(screen,BROWN,[(self.rect.x+10,self.rect.y+24),(self.rect.x+24,self.rect.y+24),(self.rect.x+16,self.rect.y+45)])
+        self.flame()
+    def flame(self):
+        for i in range(2):
+            self.particles.append([[self.rect.x+10+random.randint(1,11),self.rect.y+20], [
+                                random.randint(0,2), random.randint(0, 2)], random.randint(1,4),random.randint(60,200)])
+        for particle in self.particles:
+            # particle[0][0] += particle[1][0] * 0.08
+            particle[0][1] -= particle[1][1] * 0.8
+            particle[2] -= 0.06
+            particle[3] -= 2
+            # particle[1][1] += 0.2
+            f = pygame.surface.Surface((particle[2],particle[2]))
+            f.set_alpha(particle[3])
+            f_rect = f.get_rect(topleft=(int(particle[0][0]), int(particle[0][1]))) 
+            f.fill(random.choice([RED,YELLOW]))
+            screen.blit(f,f_rect)
+
+            if particle[2] <= 1:
+                self.particles.remove(particle)
+
+class PolyObs(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        super(PolyObs,self).__init__()
+        self.x = x
+        self.y = y
+        self.image = pygame.surface.Surface((30,30))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect(topleft=(x+5,y+10))
+    def update(self):
+        self.rect.x += player.screen_scroll
+        pygame.draw.polygon(screen,BLACK,[(self.rect.x+15,self.rect.y),(self.rect.x,self.rect.y+30),(self.rect.x+30,self.rect.y+30)])
+
+class PolyCombo(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        super(PolyCombo,self).__init__()
+        self.x = x
+        self.y = y
+        self.height = 30
+        self.width = 120
+        self.image = pygame.surface.Surface((self.width,self.height))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect(topleft=(x-40,y+10))
+        self.cooldown = 100
+        self.time = 200
+        self.hide = False
+    def update(self):
+        # self.rect.y += 1
+        if self.hide==False:
+            self.time = 200
+            self.cooldown -= 1
+            self.rect.y += 1
+        else:
+            self.cooldown += 1
+            if self.cooldown <= 100:
+                self.rect.y -= 1
+
+        if self.cooldown == 0:
+            # self.height = 0
+            self.hide = True
+        
+        if self.cooldown >= 100:
+            self.cooldown = 100
+            self.time -= 1
+            if self.time <= 0:
+                self.hide = False
+        
+
+        self.rect.x += player.screen_scroll
+        a = self.height /2
+        b = 0
+        c = self.height
+        for i in range(1,5):
+            pygame.draw.polygon(screen,BLACK,[(self.rect.x+a,self.rect.y),(self.rect.x+b,self.rect.y+self.height),(self.rect.x+c,self.rect.y+self.height)])
+            a += self.height
+            b += self.height
+            c += self.height
+        
+    
 class Bullet(pygame.sprite.Sprite):
     def __init__(self,x,y):
         super(Bullet,self).__init__()
@@ -555,7 +825,7 @@ class Bullet(pygame.sprite.Sprite):
     def flame(self):
         for i in range(2):
             self.bullet_particles.append([[self.rect.x-2+random.randint(0, 4),self.rect.y+random.randint(0, 40)], [
-                                random.randint(5,20)/10, random.randint(0, 2)], random.randint(5,15)])
+                                random.randint(5,20)/10, random.randint(0, 2)], random.randint(5,10)])
         for particle in self.bullet_particles:
             # particle[0][0] += particle[1][0]
             # particle[0][1] += particle[1][1]
@@ -575,6 +845,10 @@ box_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 fire_group = pygame.sprite.Group()
+fireflame_group = pygame.sprite.Group()
+slider_group = pygame.sprite.Group()
+polyobs_group = pygame.sprite.Group()
+polycombo_group = pygame.sprite.Group()
 all_sprire = pygame.sprite.Group()
 
 world = World()
@@ -613,6 +887,14 @@ while run:
         enemy_group.draw(screen)
         fire_group.update()
         fire_group.draw(screen)
+        fireflame_group.update()
+        fireflame_group.draw(screen)
+        slider_group.update()
+        slider_group.draw(screen)
+        polyobs_group.update()
+        polyobs_group.draw(screen)
+        polycombo_group.update()
+        polycombo_group.draw(screen)
         all_sprire.update()
         all_sprire.draw(screen)
         bullet_group.update()
